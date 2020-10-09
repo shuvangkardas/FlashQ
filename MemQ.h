@@ -21,7 +21,7 @@ class MemQ
   public:
   MemQ(uint32_t startAddr);
   MemQ(uint32_t startMem, uint32_t endMem);
-  void attachFlash(Flash *flashPtr, page_t **pagePtr);
+  void attachFlash(Flash *flashObj, page_t **pagePtr,uint8_t totalPage);
   void attachEEPRom(RingEEPROM  *ringEepRomPtr, uint8_t ringSz);
 
   void write(page_t *pageData);
@@ -35,6 +35,7 @@ class MemQ
   private:
   Flash *_flashPtr;
   page_t **_pagePtr;
+  uint8_t _totalPage;
   RingEEPROM *_ringEepPtr;
   uint32_t _startAddr;
   uint32_t _endAddr;
