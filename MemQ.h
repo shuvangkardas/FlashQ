@@ -34,6 +34,8 @@ class MemQ
   
   void savePageLoop();
   void saveBufferLoop();
+
+  void reset();
   private:
   Flash *_flashObj;
   page_t **_pagePtr;
