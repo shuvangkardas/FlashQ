@@ -1,9 +1,15 @@
 #ifndef _MEMQ_H_
 #define _MEMQ_H_
 #include<Arduino.h>
-
 #include "FlashMemory.h"
 #include "RingEEPROM.h"
+
+#define PAGE_BYTE 256
+#define SECTOR_BYTE 4096
+#define SECTOR_PAGE (SECTOR_BYTE/PAGE_BYTE)
+ 
+
+
 
 #define DEBUG_ON
 
