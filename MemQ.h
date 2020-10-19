@@ -9,14 +9,12 @@
 #define SECTOR_PAGE (SECTOR_BYTE/PAGE_BYTE)
  
 
-
-
 #define DEBUG_ON
 
 typedef struct ringBuf_t
 {
-  uint32_t headPage;
-  uint32_t tailPage;
+  uint32_t headAddr;
+  uint32_t tailAddr;
 };
 
 typedef struct page_t 
@@ -27,30 +25,25 @@ typedef struct page_t
 class MemQ
 {
   public:
-  MemQ(uint32_t startPage);
-  MemQ(uint32_t startPage, uint32_t endPage);
-  void attachFlash(Flash *flashObj, page_t **pagePtr,uint8_t totalPage);
+  MemQ(uint32_t startAddr, uint32_t endAddr);
+  void attachFlash(Flash *flashObj, void **dataPtr, uint16_t dataSize, uint16_t totalBuf);
   void attachEEPRom(RingEEPROM  *ringEepRomPtr, uint8_t ringSz);
-
-  void writePage(page_t *page);
-  page_t *readPage(page_t *page);
-   
-  void write(uint8_t *data);
-  uint8_t *read(uint8_t *data);
   
-  void savePageLoop();
-  void saveBufferLoop();
+  void saveLoop();
+  void *read(void *buf, uint8_t n = 1);
 
   void reset();
   private:
   Flash *_flashObj;
-  page_t **_pagePtr;
-  uint8_t _totalPage;
-  uint32_t _startPage;
-  uint32_t _endPage;
+  uint8_t **_dataPtr;
+  uint16_t _dataSize;
+  uint16_t _totalBuf;
+  uint32_t _startAddr;
+  uint32_t _endAddr;
   
   RingEEPROM *_ringEepObj;
-  ringBuf_t ringBuffer;  
+  ringBuf_t ringBuffer;
+  
 };
 
 #endif 

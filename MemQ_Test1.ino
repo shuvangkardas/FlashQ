@@ -1,53 +1,90 @@
 #include "MemQ.h"
 
-Flash flash(5);       //CS PIN = 5
+#define TOTAL_BUFFER 10
+#define TOTAL_FLASH_BUF (TOTAL_BUFFER/2)
+typedef struct payload_t
+{
+  byte var1;
+  byte var2;
+  byte var3;
+  byte var4;
+  byte var5;
+};
+
+Flash flash(8);       //CS PIN = 5
 RingEEPROM myeepRom(0x10);
-page_t *pageData = NULL;
-uint8_t totalPageBuf = 1;
-page_t page1;
-MemQ memQ(5, 100);
+
+payload_t payload[TOTAL_BUFFER];
+payload_t *flashPtr;
+payload_t *sensorPtr;
+
+payload_t readPayload;
+
+MemQ memQ(100, 1000);
+uint8_t index = 0;
+
 void setup()
 {
   Serial.begin(9600);
-  memQ.attachFlash(&flash, &pageData, totalPageBuf);
+//  attachFlash(Flash *flashObj, void **dataPtr, uint16_t writeLen, uint16_t readLen)
+  memQ.attachFlash(&flash, &flashPtr, sizeof(payload_t),TOTAL_FLASH_BUF);
   memQ.attachEEPRom(&myeepRom, 4);
-  //  memQ.reset();
-  delay(1000);
+//  memQ.reset();
 
-  pageData = generateData((uint8_t*)&page1);
-  flash._writePage(20, (uint8_t*)pageData);
-  flash.printPage(20);
+  sensorPtr = &payload[0];
+  flashPtr = NULL;
   
-  flash.eraseSector(0x020A);
-  flash.printPage(20);
-  flash.printPage(45);
   Serial.println(F("Setup done"));
 }
 
 void loop()
 {
-  //  pageData = generateData((uint8_t*)&page1);
-  //  flash._writePage(5, (uint8_t*)pageData);
-  //  flash.printPage(5);
-  //  delay(10000);
-  //  //  pageData = NULL;
-  //  Serial.println(F("test 1"));
-  //  pageData = generateDatagit ((uint8_t*)&page1);
-  //  Serial.println(F("Data Gen done"));
-  //  memQ.savePageLoop();
-  //  delay(1000);
-  //  Serial.println(F("test 2"));
-  //  pageData = NULL;
-  //  memQ.savePageLoop();
-  //  delay(1000);
-  //  Serial.println(F("test 3"));
-  //  pageData = generateData((uint8_t*)&page1);
-  //  memQ.savePageLoop();
-  //  delay(1000);
+  if(Serial.available())
+  {
+    byte x = Serial.read();
+    populatePayload(&sensorPtr[index]);
+    index++;
+    if(index == 5)
+    {
+        flashPtr = &sensorPtr[0];
+    }
+    else if( index == 10)
+    {
+       flashPtr = &sensorPtr[5];
+       index = 0;
+    }
+  }
+  memQ.saveLoop();
+  payload_t *pPtr = memQ.read(&readPayload);
+  if(pPtr)
+  {
+    printPayload(pPtr);
+  }
+}
+
+
+void populatePayload(payload_t *p)
+{
+  Serial.print(F("Populating Data : "));Serial.println(index);
+  p -> var1 = 1;
+  p -> var2 = 2;
+  p -> var3 = 3;
+  p -> var4 = 4;
+  p -> var5 = 5;
+}
+
+void printPayload(payload_t *p)
+{
+  Serial.print(F("Payload : "));
+  Serial.print(p -> var1); Serial.print(" ");
+  Serial.print(p -> var2); Serial.print(" ");
+  Serial.print(p -> var3); Serial.print(" ");
+  Serial.print(p -> var4); Serial.print(" ");
+  Serial.print(p -> var5); Serial.println(" ");
 }
 
 page_t *generateData(uint8_t *buffer)
-{
+{ 
   uint8_t *ptr = buffer;
   uint8_t value = 0;
   for (int i = 0 ; i < 256; i++)
@@ -57,6 +94,4 @@ page_t *generateData(uint8_t *buffer)
     value++;
   }
   return (page_t*)buffer;
-
 }
-
