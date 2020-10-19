@@ -26,7 +26,6 @@ uint8_t index = 0;
 void setup()
 {
   Serial.begin(9600);
-//  attachFlash(Flash *flashObj, void **dataPtr, uint16_t writeLen, uint16_t readLen)
   memQ.attachFlash(&flash, &flashPtr, sizeof(payload_t),TOTAL_FLASH_BUF);
   memQ.attachEEPRom(&myeepRom, 4);
 //  memQ.reset();
@@ -66,11 +65,17 @@ void loop()
 void populatePayload(payload_t *p)
 {
   Serial.print(F("Populating Data : "));Serial.println(index);
-  p -> var1 = 1;
-  p -> var2 = 2;
-  p -> var3 = 3;
-  p -> var4 = 4;
-  p -> var5 = 5;
+//  p -> var1 = 1;
+//  p -> var2 = 2;
+//  p -> var3 = 3;
+//  p -> var4 = 4;
+//  p -> var5 = 5;
+  p -> var1 = random(1,100);
+  p -> var2 = random(1,100);
+  p -> var3 = random(1,100);
+  p -> var4 = random(1,100);
+  p -> var5 = random(1,100);
+  
 }
 
 void printPayload(payload_t *p)
@@ -83,7 +88,7 @@ void printPayload(payload_t *p)
   Serial.print(p -> var5); Serial.println(" ");
 }
 
-page_t *generateData(uint8_t *buffer)
+uint8_t *generateData(uint8_t *buffer)
 { 
   uint8_t *ptr = buffer;
   uint8_t value = 0;
@@ -93,5 +98,5 @@ page_t *generateData(uint8_t *buffer)
     //    ptr[i] = 0xFF;
     value++;
   }
-  return (page_t*)buffer;
+  return buffer;
 }

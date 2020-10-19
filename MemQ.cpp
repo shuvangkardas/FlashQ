@@ -1,8 +1,8 @@
 #include "MemQ.h"
-//#include "FlashMemory.h"
-//#include "RingEEPROM.h"
 
+#if defined(DEBUG_ON)  //print page for debug
 uint8_t pageBuf[256];
+#endif
 
 MemQ::MemQ(uint32_t startAddr, uint32_t endAddr)
 {
@@ -35,18 +35,17 @@ void *MemQ::read(void *buf, uint8_t n)
   if (ringBuffer.tailAddr < ringBuffer.headAddr)
   {
     Serial.print(F("<--------Reading Payload addr : "));
-    Serial.print(ringBuffer.tailAddr);Serial.println(F("-------->"));
-    
-    uint16_t totalbyte = _dataSize*n;
+    Serial.print(ringBuffer.tailAddr); Serial.println(F("-------->"));
+
+    uint16_t totalbyte = _dataSize * n;
     _flashObj -> read(ringBuffer.tailAddr, buf, totalbyte);
     ringBuffer.tailAddr += totalbyte;
-    //Save eeprom buffer
-
-    
+    activityCounter += n;
     return buf;
   }
   else
   {
+    //    _ringEepObj -> savePacket((byte*)&ringBuffer);
     return NULL;
     Serial.println(F("No new data to read"));
   }
@@ -56,28 +55,35 @@ void MemQ::saveLoop()
 {
   if (*_dataPtr != NULL)
   {
-     Serial.print(F("<--------Writing Payload addr : "));
-     Serial.print(ringBuffer.headAddr);Serial.println(F("-------->"));
-    //Save data
+    Serial.print(F("<--------Writing Payload addr : "));
+    Serial.print(ringBuffer.headAddr); Serial.println(F("-------->"));
+
     uint16_t totalbyte = _dataSize * _totalBuf;
     _flashObj -> write(ringBuffer.headAddr, *_dataPtr, totalbyte);
-#if defined(DEBUG_ON)
-    //print page for debug
+#if defined(DEBUG_ON)  //print page for debug
     _flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
     _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
 #endif
-    //increment head pointer
-    ringBuffer.headAddr += totalbyte;
-    //update ring buffer
-    _ringEepObj -> savePacket((byte*)&ringBuffer);
-    //null pagePtr to avoid overwrite
-    *_dataPtr = NULL;
+    ringBuffer.headAddr += totalbyte; //increment head pointer
+    activityCounter += _totalBuf;
+    *_dataPtr = NULL; //null pagePtr to avoid overwrite
   }
   else
   {
     //    Serial.println(F("Ptr is null"));
   }
+
+  //EEEPROM store Data after these activity
+  if (activityCounter >= EEPROM_SAVE_AFTER)
+  {
+    Serial.println(F("<===Updating EEPROM===>"));
+    //update ring buffer
+    _ringEepObj -> savePacket((byte*)&ringBuffer);
+    activityCounter = 0;
+  }
+
 }
+
 void MemQ::reset()
 {
   ringBuffer.headAddr = _startAddr;
@@ -86,73 +92,3 @@ void MemQ::reset()
   _ringEepObj -> savePacket((byte*)&ringBuffer);
   _flashObj -> eraseChip();
 }
-
-
-//page_t *MemQ::readPage(page_t *page)
-//{
-//  if (ringBuffer.tailPage < ringBuffer.headPage)
-//  {
-//    if (ringBuffer.tailPage > _endPage)
-//    {
-//      Serial.println(F("Head Buffer Reset"));
-//      ringBuffer.tailPage = _startPage;
-//    }
-//    Serial.print(F("<----------Reading Page : "));
-//    Serial.print(ringBuffer.tailPage); Serial.println(F("-------------->"));
-//    page_t *p = (page_t*)_flashObj -> _readPage(ringBuffer.tailPage,(byte*) page);
-//    //print read page
-//    _flashObj -> printPageBytes((byte*)p);
-//    ringBuffer.tailPage++;
-//    return p;
-//  }
-//  else
-//  {
-//    Serial.println(F("No New Data to Read"));
-//    return NULL;
-//  }
-//
-//}
-//
-//void MemQ::savePageLoop()
-//{
-//  if (*_pagePtr != NULL)
-//  {
-//    page_t *page = *_pagePtr;
-//    Serial.println(F("Ptr is not null"));
-//    for (byte i = 0; i < _totalPage; i++)
-//    {
-//      if (ringBuffer.headPage > _endPage)
-//      {
-//        Serial.println(F("Head Buffer Reset"));
-//        ringBuffer.headPage = _startPage;
-//      }
-//      Serial.print(F("<-------------Writing Page : "));
-//      Serial.print(ringBuffer.headPage);
-//      Serial.println(F("------------>"));
-//#if defined(DEBUG_ON)
-//      //print Buffers before write)
-//      _flashObj -> printPageBytes((uint8_t*)page);
-//#endif
-//      //Erage Page before writing
-//      //Write Flash Pages
-//      _flashObj -> _writePage(ringBuffer.headPage, (uint8_t*)page);
-//#if defined(DEBUG_ON)
-//      //read and print page
-//      _flashObj -> printPage(ringBuffer.headPage);
-//#endif
-//      //increment page address to nex page
-//      ringBuffer.headPage++;
-//      //point page to next page data
-//      page++;
-//    }
-//    //update ring buffer
-//    _ringEepObj -> savePacket((byte*)&ringBuffer);
-//    //null pagePtr to avoid overwrite
-//    *_pagePtr = NULL;
-//  }
-//  else
-//  {
-//    Serial.println(F("Ptr is NULL"));
-//
-//  }
-//}

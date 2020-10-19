@@ -4,22 +4,13 @@
 #include "FlashMemory.h"
 #include "RingEEPROM.h"
 
-#define PAGE_BYTE 256
-#define SECTOR_BYTE 4096
-#define SECTOR_PAGE (SECTOR_BYTE/PAGE_BYTE)
- 
-
 #define DEBUG_ON
+#define EEPROM_SAVE_AFTER 20 //after flash changes this packet,eeprom save
 
 typedef struct ringBuf_t
 {
   uint32_t headAddr;
   uint32_t tailAddr;
-};
-
-typedef struct page_t 
-{
-  uint8_t data[256];
 };
 
 class MemQ
@@ -40,6 +31,8 @@ class MemQ
   uint16_t _totalBuf;
   uint32_t _startAddr;
   uint32_t _endAddr;
+
+  uint8_t activityCounter = 0;
   
   RingEEPROM *_ringEepObj;
   ringBuf_t ringBuffer;
