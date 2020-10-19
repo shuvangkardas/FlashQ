@@ -19,15 +19,14 @@ void MemQ::attachFlash(Flash *flashObj, void **dataPtr, uint16_t dataSize, uint1
   _totalBuf = totalBuf;
   //begin flash
   _flashObj -> begin();
+  _maxMemchangeCounter =  _totalBuf*2; //Eeprom will save after this number of flash activity
 
 }
 void MemQ::attachEEPRom(RingEEPROM  *ringEepRomPtr, uint8_t ringSz)
 {
   _ringEepObj = ringEepRomPtr;
-  //begin eeprom.
-  _ringEepObj -> begin(ringSz, sizeof(ringBuf_t));
-  // point last saved address.
-  _ringEepObj -> readPacket((byte*)&ringBuffer);
+  _ringEepObj -> begin(ringSz, sizeof(ringBuf_t)); //begin eeprom.
+  _ringEepObj -> readPacket((byte*)&ringBuffer);   // point last saved address.
 }
 
 void *MemQ::read(void *buf, uint8_t n)
@@ -40,7 +39,7 @@ void *MemQ::read(void *buf, uint8_t n)
     uint16_t totalbyte = _dataSize * n;
     _flashObj -> read(ringBuffer.tailAddr, buf, totalbyte);
     ringBuffer.tailAddr += totalbyte;
-    activityCounter += n;
+    _memChangeCounter += n;
     return buf;
   }
   else
@@ -65,7 +64,7 @@ void MemQ::saveLoop()
     _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
 #endif
     ringBuffer.headAddr += totalbyte; //increment head pointer
-    activityCounter += _totalBuf;
+    _memChangeCounter += _totalBuf;
     *_dataPtr = NULL; //null pagePtr to avoid overwrite
   }
   else
@@ -74,12 +73,11 @@ void MemQ::saveLoop()
   }
 
   //EEEPROM store Data after these activity
-  if (activityCounter >= EEPROM_SAVE_AFTER)
+  if (_memChangeCounter >= _maxMemchangeCounter)
   {
     Serial.println(F("<===Updating EEPROM===>"));
-    //update ring buffer
     _ringEepObj -> savePacket((byte*)&ringBuffer);
-    activityCounter = 0;
+    _memChangeCounter = 0;
   }
 
 }

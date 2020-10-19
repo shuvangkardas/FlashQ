@@ -5,7 +5,6 @@
 #include "RingEEPROM.h"
 
 #define DEBUG_ON
-#define EEPROM_SAVE_AFTER 20 //after flash changes this packet,eeprom save
 
 typedef struct ringBuf_t
 {
@@ -32,7 +31,8 @@ class MemQ
   uint32_t _startAddr;
   uint32_t _endAddr;
 
-  uint8_t activityCounter = 0;
+  uint8_t _memChangeCounter = 0;
+  uint8_t _maxMemchangeCounter = 0;
   
   RingEEPROM *_ringEepObj;
   ringBuf_t ringBuffer;

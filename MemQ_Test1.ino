@@ -2,6 +2,7 @@
 
 #define TOTAL_BUFFER 10
 #define TOTAL_FLASH_BUF (TOTAL_BUFFER/2)
+
 typedef struct payload_t
 {
   byte var1;
@@ -54,10 +55,10 @@ void loop()
     }
   }
   memQ.saveLoop();
-  payload_t *pPtr = memQ.read(&readPayload);
-  if(pPtr)
+  payload_t *Ptr = memQ.read(&readPayload);
+  if(Ptr)
   {
-    printPayload(pPtr);
+    printPayload(Ptr);
   }
 }
 
