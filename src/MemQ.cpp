@@ -13,7 +13,7 @@ MemQ::MemQ(uint32_t startAddr, uint32_t endAddr)
 void MemQ::attachFlash(Flash *flashObj, void **dataPtr, uint16_t dataSize, uint16_t totalBuf)
 {
   _flashObj = flashObj;
-  _dataPtr = dataPtr;
+  _dataPtr = (uint8_t**)dataPtr;
 
   _dataSize = dataSize;
   _totalBuf = totalBuf;
@@ -37,7 +37,7 @@ void *MemQ::read(void *buf, uint8_t n)
     Serial.print(ringBuffer.tailAddr); Serial.println(F("-------->"));
 
     uint16_t totalbyte = _dataSize * n;
-    _flashObj -> read(ringBuffer.tailAddr, buf, totalbyte);
+    _flashObj -> read(ringBuffer.tailAddr, (uint8_t*)buf, totalbyte);
     ringBuffer.tailAddr += totalbyte;
     _memChangeCounter += n;
     return buf;
