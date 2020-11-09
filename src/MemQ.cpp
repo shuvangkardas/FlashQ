@@ -34,6 +34,12 @@ uint16_t MemQ::getPayloadSz()
   return _dataSize;
 }
 
+void MemQ::attachSafetyFuncs(func_t enableBus,func_t disableBus)
+{
+	_enableBus = enableBus;
+	_disableBus = disableBus;
+}
+
 void *MemQ::read(void *buf, uint8_t n)
 {
   if (ringBuffer.tailAddr < ringBuffer.headAddr)
@@ -42,7 +48,11 @@ void *MemQ::read(void *buf, uint8_t n)
     Serial.print(ringBuffer.tailAddr); Serial.println(F("-------->"));
 
     uint16_t totalbyte = _dataSize * n;
+
+    if(_disableBus){_disableBus();}
     _flashObj -> read(ringBuffer.tailAddr, (uint8_t*)buf, totalbyte);
+    if(_enableBus){_enableBus();}
+
     ringBuffer.tailAddr += totalbyte;
     _memChangeCounter += n;
     return buf;
@@ -63,7 +73,11 @@ void MemQ::saveLoop()
     Serial.print(ringBuffer.headAddr); Serial.println(F("-------->"));
 
     uint16_t totalbyte = _dataSize * _totalBuf;
+
+    if(_disableBus){ _disableBus();}
     _flashObj -> write(ringBuffer.headAddr, *_dataPtr, totalbyte);
+    if(_enableBus) {  _enableBus();}
+
 #if defined(DEBUG_ON)  //print page for debug
     _flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
     _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
