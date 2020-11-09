@@ -49,9 +49,17 @@ void *MemQ::read(void *buf, uint8_t n)
 
     uint16_t totalbyte = _dataSize * n;
 
-    if(_disableBus){_disableBus();}
+    if(_disableBus)
+    {
+    	Serial.println(F("SPI Disabled others"));
+    	_disableBus();
+    }
     _flashObj -> read(ringBuffer.tailAddr, (uint8_t*)buf, totalbyte);
-    if(_enableBus){_enableBus();}
+    if(_enableBus)
+    {
+    	_enableBus();
+    	Serial.println(F("SPI Enabled others"));
+    }
 
     ringBuffer.tailAddr += totalbyte;
     _memChangeCounter += n;
