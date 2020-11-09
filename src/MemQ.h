@@ -21,7 +21,7 @@ class MemQ
   
   void saveLoop();
   void *read(void *buf, uint8_t n = 1);
-
+  uint16_t getPayloadSz();
   void reset();
   private:
   Flash *_flashObj;

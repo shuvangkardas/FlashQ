@@ -29,6 +29,11 @@ void MemQ::attachEEPRom(RingEEPROM  *ringEepRomPtr, uint8_t ringSz)
   _ringEepObj -> readPacket((byte*)&ringBuffer);   // point last saved address.
 }
 
+uint16_t MemQ::getPayloadSz()
+{
+  return _dataSize;
+}
+
 void *MemQ::read(void *buf, uint8_t n)
 {
   if (ringBuffer.tailAddr < ringBuffer.headAddr)
