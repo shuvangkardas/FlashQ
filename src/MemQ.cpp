@@ -88,7 +88,7 @@ void MemQ::saveLoop()
 
 #if defined(DEBUG_ON)  //print page for debug
     _flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
-    _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
+    // _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
 #endif
     ringBuffer.headAddr += totalbyte; //increment head pointer
     _memChangeCounter += _totalBuf;
