@@ -3,6 +3,7 @@
 #include<Arduino.h>
 #include "FlashMemory.h"
 #include "RingEEPROM.h"
+
 #define DEBUG_ON
 
 typedef void (*func_t)(void);
