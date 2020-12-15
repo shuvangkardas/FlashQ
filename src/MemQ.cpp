@@ -10,13 +10,14 @@ MemQ::MemQ(uint32_t startAddr, uint32_t endAddr)
   _endAddr = endAddr;
 }
 
-void MemQ::attachFlash(Flash *flashObj, void **dataPtr, uint16_t dataSize, uint16_t totalBuf)
+void MemQ::attachFlash(Flash *flashObj, uint8_t **dataPtr, uint8_t packetSz, uint8_t totalPacket)
+// void MemQ::attachFlash(Flash *flashObj, void **dataPtr, uint16_t dataSize, uint16_t totalBuf)
 {
   _flashObj = flashObj;
-  _dataPtr = (uint8_t**)dataPtr;
+  _dataPtr = dataPtr;
 
-  _dataSize = dataSize;
-  _totalBuf = totalBuf;
+  _dataSize = packetSz;
+  _totalBuf = totalPacket;
   //begin flash
   _flashObj -> begin();
   _maxMemchangeCounter =  _totalBuf*2; //Eeprom will save after this number of flash activity
@@ -40,7 +41,7 @@ void MemQ::attachSafetyFuncs(func_t enableBus,func_t disableBus)
 	_disableBus = disableBus;
 }
 
-void *MemQ::read(void *buf, uint8_t n)
+uint8_t *MemQ::read(uint8_t *buf, uint8_t n)
 {
   if (ringBuffer.tailAddr < ringBuffer.headAddr)
   {

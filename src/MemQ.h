@@ -18,18 +18,18 @@ class MemQ
 {
   public:
   MemQ(uint32_t startAddr, uint32_t endAddr);
-  void attachFlash(Flash *flashObj, void **dataPtr, uint16_t dataSize, uint16_t totalBuf);
+  void attachFlash(Flash *flashObj, uint8_t **dataPtr, uint8_t packetSz, uint8_t totalPacket);
   void attachEEPRom(RingEEPROM  *ringEepRomPtr, uint8_t ringSz);
   void attachSafetyFuncs(func_t enableBus,func_t disableBus);
   void saveLoop();
-  void *read(void *buf, uint8_t n = 1);
+  uint8_t *read(uint8_t *buf, uint8_t n = 1);
   uint16_t getPayloadSz();
   void reset();
   private:
   Flash *_flashObj;
   uint8_t **_dataPtr;
-  uint16_t _dataSize;
-  uint16_t _totalBuf;
+  uint8_t _dataSize;
+  uint8_t _totalBuf;
   uint32_t _startAddr;
   uint32_t _endAddr;
 
