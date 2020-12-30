@@ -35,9 +35,9 @@ uint16_t MemQ::getPayloadSz()
   return _dataSize;
 }
 
-void MemQ::debugOn()
+void MemQ::debug(bool onOff)
 {
-	_debug = true;
+	_debug = onOff;
 }
 
 void MemQ::attachSafetyFuncs(func_t enableBus,func_t disableBus)

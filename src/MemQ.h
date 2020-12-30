@@ -25,7 +25,7 @@ class MemQ
   uint8_t *read(uint8_t *buf, uint8_t n = 1);
   uint16_t getPayloadSz();
   void reset();
-  void debugOn();
+  void debug(bool onOff);
   private:
   Flash *_flashObj;
   uint8_t **_dataPtr;
