@@ -50,8 +50,8 @@ uint8_t *MemQ::read(uint8_t *buf, uint8_t n)
 {
   if (ringBuffer.tailAddr < ringBuffer.headAddr)
   {
-    Serial.print(F("<---Flash Read: "));
-    Serial.print(ringBuffer.tailAddr); Serial.println(F("---->"));
+    Serial.print(F("<--Flash Read:"));
+    Serial.print(ringBuffer.tailAddr); Serial.println(F("-->"));
 
     uint16_t totalbyte = _dataSize * n;
 
@@ -83,8 +83,9 @@ void MemQ::saveLoop()
 {
   if (*_dataPtr != NULL)
   {
-    Serial.print(F("<----Flash Write:"));
-    Serial.print(ringBuffer.headAddr); Serial.println(F("---->"));
+
+    Serial.print(F("<--Flash Write:"));
+    Serial.print(ringBuffer.headAddr);Serial.println(F("-->"));
 
     uint16_t totalbyte = _dataSize * _totalBuf;
 
