@@ -25,6 +25,7 @@ class MemQ
   uint8_t *read(uint8_t *buf, uint8_t n = 1);
   uint16_t getPayloadSz();
   void reset();
+  void debugOn();
   private:
   Flash *_flashObj;
   uint8_t **_dataPtr;
@@ -38,6 +39,7 @@ class MemQ
 
   uint8_t _memChangeCounter = 0;
   uint8_t _maxMemchangeCounter = 0;
+  bool _debug = false;
   
   RingEEPROM *_ringEepObj;
   ringBuf_t ringBuffer;

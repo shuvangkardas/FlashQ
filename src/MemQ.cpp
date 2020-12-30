@@ -35,6 +35,11 @@ uint16_t MemQ::getPayloadSz()
   return _dataSize;
 }
 
+void MemQ::debugOn()
+{
+	_debug = true;
+}
+
 void MemQ::attachSafetyFuncs(func_t enableBus,func_t disableBus)
 {
 	_enableBus = enableBus;
@@ -88,7 +93,10 @@ void MemQ::saveLoop()
     if(_enableBus) {  _enableBus();}
 
 #if defined(DEBUG_ON)  //print page for debug
-    _flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
+    if(_debug)
+    {
+    	_flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
+    }
     // _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
 #endif
     ringBuffer.headAddr += totalbyte; //increment head pointer
