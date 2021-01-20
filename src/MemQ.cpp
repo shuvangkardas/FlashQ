@@ -4,10 +4,10 @@
 uint8_t pageBuf[256];
 #endif
 
-MemQ::MemQ(uint32_t startAddr, uint32_t endAddr)
+MemQ::MemQ(uint16_t startSector, uint16_t endSector)
 {
-  _startAddr = startAddr;
-  _endAddr = endAddr;
+  _startSector = startSector;
+  _endSector = endSector;
 }
 
 void MemQ::attachFlash(Flash *flashObj, uint8_t **dataPtr, uint8_t packetSz, uint8_t totalPacket)
@@ -52,10 +52,6 @@ void MemQ::attachSafetyFuncs(func_t enableBus,func_t disableBus)
 
 uint32_t MemQ::available()
 {
-  // if(ringBuffer.tailAddr < ringBuffer.headAddr)
-  // {
-
-  // }
   return (ringBuffer.headAddr - ringBuffer.tailAddr);
 }
 
@@ -160,12 +156,16 @@ void MemQ::manageMemory()
     _ringEepObj -> savePacket((byte*)&ringBuffer);
     _memChangeCounter = 0;
   }
+
+uint16_t currentSector = (uint16_t)(ringBuffer.headAddr >> 12); 
+// _flashObj -> eraseSector(currentSector+1);
+
 }
 
 void MemQ::reset()
 {
-  ringBuffer.headAddr = _startAddr;
-  ringBuffer.tailAddr = _startAddr;
+  ringBuffer.headAddr = _startSector;
+  ringBuffer.tailAddr = _startSector;
   _ringEepObj -> _clrStatusBuf();
   _ringEepObj -> savePacket((byte*)&ringBuffer);
   _flashObj -> eraseChip();
