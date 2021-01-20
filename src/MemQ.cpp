@@ -85,33 +85,33 @@ uint8_t *MemQ::read(uint8_t *buf, uint8_t n)
 
 void MemQ::saveLoop()
 {
-  if (*_dataPtr != NULL)
-  {
+//   if (*_dataPtr != NULL)
+//   {
 
-    Serial.print(F("<--Flash Write:"));
-    Serial.print(ringBuffer.headAddr);Serial.println(F("-->"));
+//     Serial.print(F("<--Flash Write:"));
+//     Serial.print(ringBuffer.headAddr);Serial.println(F("-->"));
 
-    uint16_t totalbyte = _dataSize * _totalBuf;
+//     uint16_t totalbyte = _dataSize * _totalBuf;
 
-    if(_disableBus){ _disableBus();}
-    _flashObj -> write(ringBuffer.headAddr, *_dataPtr, totalbyte);
-    if(_enableBus) {  _enableBus();}
+//     if(_disableBus){ _disableBus();}
+//     _flashObj -> write(ringBuffer.headAddr, *_dataPtr, totalbyte);
+//     if(_enableBus) {  _enableBus();}
 
-#if defined(DEBUG_ON)  //print page for debug
-    if(_debug)
-    {
-    	_flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
-    }
-    // _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
-#endif
-    ringBuffer.headAddr += totalbyte; //increment head pointer
-    _memChangeCounter += _totalBuf;
-    *_dataPtr = NULL; //null pagePtr to avoid overwrite
-  }
-  else
-  {
-    //    Serial.println(F("Ptr is null"));
-  }
+// #if defined(DEBUG_ON)  //print page for debug
+//     if(_debug)
+//     {
+//     	_flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
+//     }
+//     // _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
+// #endif
+//     ringBuffer.headAddr += totalbyte; //increment head pointer
+//     _memChangeCounter += _totalBuf;
+//     *_dataPtr = NULL; //null pagePtr to avoid overwrite
+//   }
+//   else
+//   {
+//     //    Serial.println(F("Ptr is null"));
+//   }
 
   // //EEEPROM store Data after these activity
   // if (_memChangeCounter >= _maxMemchangeCounter)
@@ -120,6 +120,7 @@ void MemQ::saveLoop()
   //   _ringEepObj -> savePacket((byte*)&ringBuffer);
   //   _memChangeCounter = 0;
   // }
+  saveFast();
   manageMemory();
 
 }
