@@ -50,26 +50,31 @@ void MemQ::attachSafetyFuncs(func_t enableBus,func_t disableBus)
 	_disableBus = disableBus;
 }
 
+uint32_t MemQ::available()
+{
+  // if(ringBuffer.tailAddr < ringBuffer.headAddr)
+  // {
+
+  // }
+  return (ringBuffer.headAddr - ringBuffer.tailAddr);
+}
+
 uint8_t *MemQ::read(uint8_t *buf, uint8_t n)
 {
   if (ringBuffer.tailAddr < ringBuffer.headAddr)
   {
-    Serial.print(F("<--Flash Read:"));
-    Serial.print(ringBuffer.tailAddr); Serial.println(F("-->"));
-
-    uint16_t totalbyte = _dataSize * n;
-
-    if(_disableBus)
+    if(_debug)
     {
-    	// Serial.println(F("SPI Disabled others"));
-    	_disableBus();
+      Serial.print(F("<--Flash Read:"));Serial.print(ringBuffer.tailAddr); Serial.println(F("-->"));
     }
+
+    uint16_t totalbyte;
+    if(n == 1){ totalbyte = _dataSize; }
+    else{ totalbyte = _dataSize * n; }
+
+    if(_disableBus) { _disableBus(); }
     _flashObj -> read(ringBuffer.tailAddr, (uint8_t*)buf, totalbyte);
-    if(_enableBus)
-    {
-    	_enableBus();
-    	// Serial.println(F("SPI Enabled others"));
-    }
+    if(_enableBus) { _enableBus(); }
 
     ringBuffer.tailAddr += totalbyte;
     _memChangeCounter += n;
@@ -77,9 +82,9 @@ uint8_t *MemQ::read(uint8_t *buf, uint8_t n)
   }
   else
   {
-    //    _ringEepObj -> savePacket((byte*)&ringBuffer);
+    // if(_debug){Serial.println(F("No new data to read"));}
     return NULL;
-    Serial.println(F("No new data to read"));
+    
   }
 }
 

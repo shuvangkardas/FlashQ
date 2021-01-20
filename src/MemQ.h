@@ -29,7 +29,7 @@ class MemQ
 
   /**************New API*******************/
 
-
+  uint32_t available();
   void saveFast();
   void manageMemory();
   private:
