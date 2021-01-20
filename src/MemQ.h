@@ -26,6 +26,12 @@ class MemQ
   uint16_t getPayloadSz();
   void reset();
   void debug(bool onOff);
+
+  /**************New API*******************/
+
+
+  void saveFast();
+  void manageMemory();
   private:
   Flash *_flashObj;
   uint8_t **_dataPtr;
@@ -43,6 +49,8 @@ class MemQ
   
   RingEEPROM *_ringEepObj;
   ringBuf_t ringBuffer;
+
+  uint16_t _totalByteToSave;
   
 };
 

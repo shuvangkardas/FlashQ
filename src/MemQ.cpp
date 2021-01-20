@@ -18,11 +18,15 @@ void MemQ::attachFlash(Flash *flashObj, uint8_t **dataPtr, uint8_t packetSz, uin
 
   _dataSize = packetSz;
   _totalBuf = totalPacket;
+  _totalByteToSave = packetSz*totalPacket;
+
   //begin flash
   _flashObj -> begin();
   _maxMemchangeCounter =  _totalBuf*2; //Eeprom will save after this number of flash activity
 
 }
+
+
 void MemQ::attachEEPRom(RingEEPROM  *ringEepRomPtr, uint8_t ringSz)
 {
   _ringEepObj = ringEepRomPtr;
@@ -57,14 +61,14 @@ uint8_t *MemQ::read(uint8_t *buf, uint8_t n)
 
     if(_disableBus)
     {
-    	Serial.println(F("SPI Disabled others"));
+    	// Serial.println(F("SPI Disabled others"));
     	_disableBus();
     }
     _flashObj -> read(ringBuffer.tailAddr, (uint8_t*)buf, totalbyte);
     if(_enableBus)
     {
     	_enableBus();
-    	Serial.println(F("SPI Enabled others"));
+    	// Serial.println(F("SPI Enabled others"));
     }
 
     ringBuffer.tailAddr += totalbyte;
@@ -109,6 +113,40 @@ void MemQ::saveLoop()
     //    Serial.println(F("Ptr is null"));
   }
 
+  // //EEEPROM store Data after these activity
+  // if (_memChangeCounter >= _maxMemchangeCounter)
+  // {
+  //   Serial.println(F("<==Updating EEPROM==>"));
+  //   _ringEepObj -> savePacket((byte*)&ringBuffer);
+  //   _memChangeCounter = 0;
+  // }
+  manageMemory();
+
+}
+
+void MemQ::saveFast()
+{
+  if (*_dataPtr != NULL)
+  {
+    if(_disableBus){ _disableBus();}
+    _flashObj -> write(ringBuffer.headAddr, *_dataPtr, _totalByteToSave);
+    if(_enableBus) {  _enableBus();}
+
+    if(_debug)
+    {
+      Serial.print(F("<--Flash Write:"));
+      Serial.print(ringBuffer.headAddr);Serial.println(F("-->")); 
+     _flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
+    }
+
+    ringBuffer.headAddr += _totalByteToSave;  //increment head pointer
+    _memChangeCounter += _totalBuf;
+    *_dataPtr = NULL;                  //null pagePtr to avoid overwrite
+  }
+}
+
+void MemQ::manageMemory()
+{
   //EEEPROM store Data after these activity
   if (_memChangeCounter >= _maxMemchangeCounter)
   {
@@ -116,7 +154,6 @@ void MemQ::saveLoop()
     _ringEepObj -> savePacket((byte*)&ringBuffer);
     _memChangeCounter = 0;
   }
-
 }
 
 void MemQ::reset()
