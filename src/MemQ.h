@@ -12,6 +12,7 @@ typedef struct ringBuf_t
 {
   uint32_t headAddr;
   uint32_t tailAddr;
+  uint16_t erasedSector;
 };
 
 class MemQ
@@ -38,9 +39,9 @@ private:
   uint8_t **_dataPtr;
   uint8_t _dataSize;
   uint8_t _totalBuf;
-  uint16_t _startSector;
-  uint16_t _endSector;
   uint16_t _totalByteToSave;
+  uint32_t _startAddr;
+  uint32_t _endAddr;
 
   RingEEPROM *_ringEepObj;
   ringBuf_t ringBuffer;

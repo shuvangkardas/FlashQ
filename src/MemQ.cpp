@@ -1,13 +1,16 @@
 #include "MemQ.h"
 
-#if defined(DEBUG_ON)  //print page for debug
+#define SECTOR_SIZE 4096UL
+#if defined(DEBUG_ON) //print page for debug
 uint8_t pageBuf[256];
 #endif
 
 MemQ::MemQ(uint16_t startSector, uint16_t endSector)
 {
-  _startSector = startSector;
-  _endSector = endSector;
+  _startAddr = (uint32_t)(startSector << 12);
+  _endAddr = (uint32_t)(endSector << 12) + SECTOR_SIZE;
+  // _startSector = startSector;
+  // _endSector = endSector;
 }
 
 void MemQ::attachFlash(Flash *flashObj, uint8_t **dataPtr, uint8_t packetSz, uint8_t totalPacket)
@@ -18,20 +21,21 @@ void MemQ::attachFlash(Flash *flashObj, uint8_t **dataPtr, uint8_t packetSz, uin
 
   _dataSize = packetSz;
   _totalBuf = totalPacket;
-  _totalByteToSave = packetSz*totalPacket;
-
+  _totalByteToSave = packetSz * totalPacket;
+  // _endAddr = _endAddr - _totalByteToSave; //Adjusting last endAddr
   //begin flash
-  _flashObj -> begin();
-  _maxMemchangeCounter =  _totalBuf*2; //Eeprom will save after this number of flash activity
+  _flashObj->begin();
+  _maxMemchangeCounter = _totalBuf * 2; //Eeprom will save after this number of flash activity
 
+  Serial.print(F("Flash Start Addr : ")); Serial.println(_startAddr);
+  Serial.print(F("Flash End Addr : ")); Serial.println(_endAddr);
 }
 
-
-void MemQ::attachEEPRom(RingEEPROM  *ringEepRomPtr, uint8_t ringSz)
+void MemQ::attachEEPRom(RingEEPROM *ringEepRomPtr, uint8_t ringSz)
 {
   _ringEepObj = ringEepRomPtr;
-  _ringEepObj -> begin(ringSz, sizeof(ringBuf_t)); //begin eeprom.
-  _ringEepObj -> readPacket((byte*)&ringBuffer);   // point last saved address.
+  _ringEepObj->begin(ringSz, sizeof(ringBuf_t)); //begin eeprom.
+  _ringEepObj->readPacket((byte *)&ringBuffer);  // point last saved address.
 }
 
 uint16_t MemQ::getPayloadSz()
@@ -41,78 +45,44 @@ uint16_t MemQ::getPayloadSz()
 
 void MemQ::debug(bool onOff)
 {
-	_debug = onOff;
+  _debug = onOff;
 }
 
-void MemQ::attachSafetyFuncs(func_t enableBus,func_t disableBus)
+void MemQ::attachSafetyFuncs(func_t enableBus, func_t disableBus)
 {
-	_enableBus = enableBus;
-	_disableBus = disableBus;
-}
-
-uint32_t MemQ::available()
-{
-  return (ringBuffer.headAddr - ringBuffer.tailAddr);
-}
-
-uint8_t *MemQ::read(uint8_t *buf, uint8_t n)
-{
-  if (ringBuffer.tailAddr < ringBuffer.headAddr)
-  {
-    if(_debug)
-    {
-      Serial.print(F("<--Flash Read:"));Serial.print(ringBuffer.tailAddr); Serial.println(F("-->"));
-    }
-
-    uint16_t totalbyte;
-    if(n == 1){ totalbyte = _dataSize; }
-    else{ totalbyte = _dataSize * n; }
-
-    if(_disableBus) { _disableBus(); }
-    _flashObj -> read(ringBuffer.tailAddr, (uint8_t*)buf, totalbyte);
-    if(_enableBus) { _enableBus(); }
-
-    ringBuffer.tailAddr += totalbyte;
-    _memChangeCounter += n;
-    return buf;
-  }
-  else
-  {
-    // if(_debug){Serial.println(F("No new data to read"));}
-    return NULL;
-    
-  }
+  _enableBus = enableBus;
+  _disableBus = disableBus;
 }
 
 void MemQ::saveLoop()
 {
-//   if (*_dataPtr != NULL)
-//   {
+  //   if (*_dataPtr != NULL)
+  //   {
 
-//     Serial.print(F("<--Flash Write:"));
-//     Serial.print(ringBuffer.headAddr);Serial.println(F("-->"));
+  //     Serial.print(F("<--Flash Write:"));
+  //     Serial.print(ringBuffer.headAddr);Serial.println(F("-->"));
 
-//     uint16_t totalbyte = _dataSize * _totalBuf;
+  //     uint16_t totalbyte = _dataSize * _totalBuf;
 
-//     if(_disableBus){ _disableBus();}
-//     _flashObj -> write(ringBuffer.headAddr, *_dataPtr, totalbyte);
-//     if(_enableBus) {  _enableBus();}
+  //     if(_disableBus){ _disableBus();}
+  //     _flashObj -> write(ringBuffer.headAddr, *_dataPtr, totalbyte);
+  //     if(_enableBus) {  _enableBus();}
 
-// #if defined(DEBUG_ON)  //print page for debug
-//     if(_debug)
-//     {
-//     	_flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
-//     }
-//     // _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
-// #endif
-//     ringBuffer.headAddr += totalbyte; //increment head pointer
-//     _memChangeCounter += _totalBuf;
-//     *_dataPtr = NULL; //null pagePtr to avoid overwrite
-//   }
-//   else
-//   {
-//     //    Serial.println(F("Ptr is null"));
-//   }
+  // #if defined(DEBUG_ON)  //print page for debug
+  //     if(_debug)
+  //     {
+  //     	_flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
+  //     }
+  //     // _flashObj -> dumpPage((ringBuffer.headAddr >> 8) + 1, pageBuf);
+  // #endif
+  //     ringBuffer.headAddr += totalbyte; //increment head pointer
+  //     _memChangeCounter += _totalBuf;
+  //     *_dataPtr = NULL; //null pagePtr to avoid overwrite
+  //   }
+  //   else
+  //   {
+  //     //    Serial.println(F("Ptr is null"));
+  //   }
 
   // //EEEPROM store Data after these activity
   // if (_memChangeCounter >= _maxMemchangeCounter)
@@ -123,29 +93,94 @@ void MemQ::saveLoop()
   // }
   saveFast();
   manageMemory();
-
 }
 
 void MemQ::saveFast()
 {
   if (*_dataPtr != NULL)
   {
-    if(_disableBus){ _disableBus();}
-    _flashObj -> write(ringBuffer.headAddr, *_dataPtr, _totalByteToSave);
-    if(_enableBus) {  _enableBus();}
-
-    if(_debug)
+    if (_disableBus)
     {
-      Serial.print(F("<--Flash Write:"));
-      Serial.print(ringBuffer.headAddr);Serial.println(F("-->")); 
-     _flashObj -> dumpPage(ringBuffer.headAddr >> 8, pageBuf);
+      _disableBus();
+    }
+    _flashObj->write(ringBuffer.headAddr, *_dataPtr, _totalByteToSave);
+    if (_enableBus)
+    {
+      _enableBus();
     }
 
-    ringBuffer.headAddr += _totalByteToSave;  //increment head pointer
+    if (_debug)
+    {
+      Serial.print(F("<--Flash Write:"));
+      Serial.print(ringBuffer.headAddr);
+      Serial.println(F("-->"));
+      _flashObj->dumpPage(ringBuffer.headAddr >> 8, pageBuf);
+    }
+
+    ringBuffer.headAddr += _totalByteToSave; //increment head pointer
+    if (ringBuffer.headAddr >= _endAddr)
+    {
+      ringBuffer.headAddr = _startAddr;
+      ringBuffer.erasedSector = ringBuffer.headAddr>>12;//byte addr to sector addr
+
+      Serial.print(F(">>>Erasing Sector : "));Serial.println(ringBuffer.erasedSector);
+      _flashObj->eraseSector(ringBuffer.erasedSector);
+      // clear first sector
+    }
     _memChangeCounter += _totalBuf;
-    *_dataPtr = NULL;                  //null pagePtr to avoid overwrite
+    *_dataPtr = NULL; //null pagePtr to avoid overwrite
   }
 }
+
+uint32_t MemQ::available()
+{
+  return abs(ringBuffer.headAddr - ringBuffer.tailAddr);
+}
+
+uint8_t *MemQ::read(uint8_t *buf, uint8_t n)
+{
+  if (ringBuffer.tailAddr == ringBuffer.headAddr)
+  {
+    // if(_debug){Serial.println(F("No new data to read"));}
+    return NULL;
+  }
+  else
+  {
+    if (_debug)
+    {
+      Serial.print(F("<--Flash Read:"));
+      Serial.print(ringBuffer.tailAddr);
+      Serial.println(F("-->"));
+    }
+
+    uint16_t totalbyte = _dataSize;
+    if (n > 1)
+    {
+      totalbyte = _dataSize * n;
+    }
+
+
+    if (_disableBus)
+    {
+      _disableBus();
+    }
+    _flashObj->read(ringBuffer.tailAddr, (uint8_t *)buf, totalbyte);
+    if (_enableBus)
+    {
+      _enableBus();
+    }
+
+    ringBuffer.tailAddr += totalbyte;
+    if (ringBuffer.tailAddr >= _endAddr)
+    {
+      ringBuffer.tailAddr = _startAddr;
+    }
+    _memChangeCounter += n;
+    return buf;
+  }
+}
+
+// uint16_t _sectorErased = ringBuffer.headAddr >> 12;
 
 void MemQ::manageMemory()
 {
@@ -153,20 +188,25 @@ void MemQ::manageMemory()
   if (_memChangeCounter >= _maxMemchangeCounter)
   {
     Serial.println(F("<==Updating EEPROM==>"));
-    _ringEepObj -> savePacket((byte*)&ringBuffer);
+    _ringEepObj->savePacket((byte *)&ringBuffer);
     _memChangeCounter = 0;
   }
 
-uint16_t currentSector = (uint16_t)(ringBuffer.headAddr >> 12); 
-// _flashObj -> eraseSector(currentSector+1);
-
+  uint16_t currentSector = (uint16_t)(ringBuffer.headAddr >> 12);
+  if (currentSector == ringBuffer.erasedSector)
+  {
+    ringBuffer.erasedSector++;
+    Serial.print(F(">>>Erasing Sector : "));Serial.println(ringBuffer.erasedSector);
+    _flashObj->eraseSector(ringBuffer.erasedSector); //erase next sector
+  }
+  // _flashObj -> eraseSector(currentSector+1);
 }
 
 void MemQ::reset()
 {
-  ringBuffer.headAddr = _startSector;
-  ringBuffer.tailAddr = _startSector;
-  _ringEepObj -> _clrStatusBuf();
-  _ringEepObj -> savePacket((byte*)&ringBuffer);
-  _flashObj -> eraseChip();
+  ringBuffer.headAddr = _startAddr;
+  ringBuffer.tailAddr = _endAddr;
+  _ringEepObj->_clrStatusBuf();
+  _ringEepObj->savePacket((byte *)&ringBuffer);
+  _flashObj->eraseChip();
 }
