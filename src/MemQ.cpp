@@ -116,7 +116,7 @@ void MemQ::saveFast()
       Serial.print(F("<--Flash Write:"));
       Serial.print(ringBuffer.headAddr);
       Serial.println(F("-->"));
-      _flashObj->dumpPage(ringBuffer.headAddr >> 8, pageBuf);
+      // _flashObj->dumpPage(ringBuffer.headAddr >> 8, pageBuf);
     }
 
     ringBuffer.headAddr += _totalByteToSave; //increment head pointer
