@@ -125,6 +125,12 @@ void MemQ::saveFast()
 
       Serial.print(F(">>>Erasing Sector : "));Serial.println(ringBuffer.erasedSector);
       _flashObj->eraseSector(ringBuffer.erasedSector);
+      uint16_t curPage = ringBuffer.erasedSector<<4;
+      for(uint16_t i =curPage; i<curPage+16; i++ )
+      {
+        _flashObj->dumpPage(i, pageBuf);
+      }
+      
       // clear first sector
     }
     _memChangeCounter += _totalBuf;
@@ -198,6 +204,8 @@ void MemQ::manageMemory()
     ringBuffer.erasedSector++;
     Serial.print(F(">>>Erasing Sector : "));Serial.println(ringBuffer.erasedSector);
     _flashObj->eraseSector(ringBuffer.erasedSector); //erase next sector
+    _flashObj->dumpPage(ringBuffer.erasedSector<<4, pageBuf);
+
   }
   // _flashObj -> eraseSector(currentSector+1);
 }
