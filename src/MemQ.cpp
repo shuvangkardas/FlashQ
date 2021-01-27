@@ -229,7 +229,7 @@ void MemQ::manageMemory()
 void MemQ::reset()
 {
   ringBuffer.headAddr = _startAddr;
-  ringBuffer.tailAddr = _endAddr;
+  ringBuffer.tailAddr = _startAddr;
   _ringEepObj->_clrStatusBuf();
   _ringEepObj->savePacket((byte *)&ringBuffer);
   _flashObj->eraseChip();
