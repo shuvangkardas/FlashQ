@@ -37,6 +37,8 @@ public:
   void manageMemory();
 
 private:
+  void _eraseNextSector();
+  
   Flash *_flashObj;
   uint8_t **_dataPtr;
   uint8_t _dataSize;

@@ -136,12 +136,11 @@ void MemQ::saveFast()
       ringBuffer.erasedSector = ringBuffer.headAddr >> 12; //byte addr to sector addr
 
       uint32_t curPage = (uint32_t)(ringBuffer.erasedSector<<4);
-      for (uint32_t i = curPage; i < curPage + 16; i++ )
-      {
-        _flashObj->dumpPage(i, pageBuf);
-      }
-
-      // clear first sector
+      _flashObj->dumpPage(curPage, pageBuf);
+      // for (uint32_t i = curPage; i < curPage + 16; i++ )
+      // {
+      //   _flashObj->dumpPage(i, pageBuf);
+      // }
     }
     _memChangeCounter += _totalBuf;
     *_dataPtr = NULL; //null pagePtr to avoid overwrite
@@ -202,12 +201,18 @@ void MemQ::manageMemory()
   //EEEPROM store Data after these activity
   if (_memChangeCounter >= _maxMemchangeCounter)
   {
-    Serial.println(F("<==Updating EEPROM==>"));
+    Serial.println(F("<==Updating FLash Pointer==>"));
+    _eraseNextSector();
     _ringEepObj->savePacket((byte *)&ringBuffer);
     _memChangeCounter = 0;
   }
 
-  uint16_t currentSector = (uint16_t)(ringBuffer.headAddr >> 12);
+ 
+}
+
+void MemQ::_eraseNextSector()
+{
+   uint16_t currentSector = (uint16_t)(ringBuffer.headAddr >> 12);
   // uint16_t erasedSector  = (uint16_t)(ringBuffer.erasedSecAddr >> 12);
   if (currentSector == ringBuffer.erasedSector)
   {
