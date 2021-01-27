@@ -8,7 +8,7 @@ uint8_t pageBuf[256];
 MemQ::MemQ(uint16_t startSector, uint16_t endSector)
 {
   _startAddr = (uint32_t)(startSector << 12);
-  _endAddr = (uint32_t)(endSector << 12) + SECTOR_SIZE;
+  _endAddr = (uint32_t)(endSector << 12) + SECTOR_SIZE-1;
   // _startSector = startSector;
   // _endSector = endSector;
 }
@@ -22,7 +22,11 @@ void MemQ::attachFlash(Flash *flashObj, uint8_t **dataPtr, uint8_t packetSz, uin
   _dataSize = packetSz;
   _totalBuf = totalPacket;
   _totalByteToSave = packetSz * totalPacket;
-  // _endAddr = _endAddr - _totalByteToSave; //Adjusting last endAddr
+
+  uint16_t leftByte = (_endAddr - _startAddr)%_totalByteToSave;
+  Serial.print(F("Left Byte : ")); Serial.println(leftByte);
+  _endAddr = _endAddr - leftByte; //Adjusting last endAddr
+  Serial.print(F("Last Addr: ")); Serial.println(_endAddr);
   //begin flash
   _flashObj->begin();
   _maxMemchangeCounter = _totalBuf * 2; //Eeprom will save after this number of flash activity
@@ -123,18 +127,18 @@ void MemQ::saveFast()
     if (ringBuffer.headAddr >= _endAddr)
     {
       ringBuffer.headAddr = _startAddr;
-      ringBuffer.erasedSector = ringBuffer.headAddr >> 12; //byte addr to sector addr
-      reset(); //resets device as sector erase is not working
-      // Serial.print(F(">>>Erasing Sector : "));
-      // Serial.println(ringBuffer.erasedSector);
+      ringBuffer.erasedSecAddr = ringBuffer.headAddr; //byte addr to sector addr
+      // reset(); //resets device as sector erase is not working
+      Serial.print(F(">>>Erasing Sector : "));
+      Serial.println(ringBuffer.erasedSecAddr >> 12);
      
-      // _flashObj->eraseSector(ringBuffer.erasedSector);
+      _flashObj -> eraseSector(ringBuffer.erasedSecAddr);
 
-      // uint16_t curPage = ringBuffer.erasedSector << 4;
-      // for (uint16_t i = curPage; i < curPage + 16; i++)
-      // {
-      //   _flashObj->dumpPage(i, pageBuf);
-      // }
+      uint16_t curPage = ringBuffer.erasedSecAddr >> 8;
+      for (uint16_t i = curPage; i < curPage + 16; i++ )
+      {
+        _flashObj->dumpPage(i, pageBuf);
+      }
 
       // clear first sector
     }
@@ -202,15 +206,24 @@ void MemQ::manageMemory()
     _memChangeCounter = 0;
   }
 
-  // uint16_t currentSector = (uint16_t)(ringBuffer.headAddr >> 12);
-  // if (currentSector == ringBuffer.erasedSector)
-  // {
-  //   ringBuffer.erasedSector++;
-  //   Serial.print(F(">>>Erasing Sector : "));
-  //   Serial.println(ringBuffer.erasedSector);
-  //   _flashObj->eraseSector(ringBuffer.erasedSector); //erase next sector
-  //   _flashObj->dumpPage(ringBuffer.erasedSector << 4, pageBuf);
-  // }
+  uint16_t currentSector = (uint16_t)(ringBuffer.headAddr >> 12);
+  uint16_t erasedSector  = (uint16_t)(ringBuffer.erasedSecAddr >> 12);
+  if (currentSector == erasedSector)
+  {
+    uint32_t tempSecAddr = ringBuffer.erasedSecAddr + SECTOR_SIZE;
+    // uint16_t endSecotr = _endAddr << 12;
+    // if()
+    // ringBuffer.erasedSecAddr += SECTOR_SIZE;
+    if(_endAddr < tempSecAddr)
+    {
+      Serial.print(F(">>>Adv. Erasing Sector : "));
+      Serial.println(tempSecAddr >> 12);
+      _flashObj->eraseSector(tempSecAddr); //Erase Next Sector
+      ringBuffer.erasedSecAddr = tempSecAddr;
+      _flashObj->dumpPage(ringBuffer.erasedSecAddr>>8, pageBuf);
+    }
+    
+  }
 }
 
 void MemQ::reset()

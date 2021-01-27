@@ -12,7 +12,7 @@ typedef struct ringBuf_t
 {
   uint32_t headAddr;
   uint32_t tailAddr;
-  uint16_t erasedSector;
+  uint32_t erasedSecAddr;
 };
 
 class MemQ
