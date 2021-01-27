@@ -127,15 +127,16 @@ void MemQ::saveFast()
     if (ringBuffer.headAddr >= _endAddr)
     {
       ringBuffer.headAddr = _startAddr;
-      ringBuffer.erasedSecAddr = ringBuffer.headAddr; //byte addr to sector addr
+      
       // reset(); //resets device as sector erase is not working
       Serial.print(F(">>>Erasing Sector : "));
-      Serial.println(ringBuffer.erasedSecAddr >> 12);
+      Serial.println(ringBuffer.headAddr>>12);
      
-      _flashObj -> eraseSector(ringBuffer.erasedSecAddr);
+      _flashObj -> eraseSector(ringBuffer.headAddr);
+      ringBuffer.erasedSector = ringBuffer.headAddr >> 12; //byte addr to sector addr
 
-      uint16_t curPage = ringBuffer.erasedSecAddr >> 8;
-      for (uint16_t i = curPage; i < curPage + 16; i++ )
+      uint32_t curPage = (uint32_t)(ringBuffer.erasedSector<<4);
+      for (uint32_t i = curPage; i < curPage + 16; i++ )
       {
         _flashObj->dumpPage(i, pageBuf);
       }
@@ -207,20 +208,19 @@ void MemQ::manageMemory()
   }
 
   uint16_t currentSector = (uint16_t)(ringBuffer.headAddr >> 12);
-  uint16_t erasedSector  = (uint16_t)(ringBuffer.erasedSecAddr >> 12);
-  if (currentSector == erasedSector)
+  // uint16_t erasedSector  = (uint16_t)(ringBuffer.erasedSecAddr >> 12);
+  if (currentSector == ringBuffer.erasedSector)
   {
-    uint32_t tempSecAddr = ringBuffer.erasedSecAddr + SECTOR_SIZE;
-    // uint16_t endSecotr = _endAddr << 12;
-    // if()
-    // ringBuffer.erasedSecAddr += SECTOR_SIZE;
-    if(_endAddr < tempSecAddr)
+    uint16_t endSector = _endAddr >> 12;
+    uint16_t tempSector = ringBuffer.erasedSector + 1;
+    if(tempSector <= endSector)
     {
       Serial.print(F(">>>Adv. Erasing Sector : "));
-      Serial.println(tempSecAddr >> 12);
+      Serial.println(tempSector);
+      uint32_t tempSecAddr = (uint32_t)(tempSector<<12);
       _flashObj->eraseSector(tempSecAddr); //Erase Next Sector
-      ringBuffer.erasedSecAddr = tempSecAddr;
-      _flashObj->dumpPage(ringBuffer.erasedSecAddr>>8, pageBuf);
+      ringBuffer.erasedSector = tempSector;
+      _flashObj->dumpPage(ringBuffer.erasedSector<<4, pageBuf);
     }
     
   }
