@@ -28,6 +28,7 @@ public:
   uint8_t *read(uint8_t *buf, uint8_t n = 1);
   uint16_t getPayloadSz();
   void reset();
+  void erase();
   void debug(bool onOff);
 
   /**************New API*******************/
@@ -38,7 +39,7 @@ public:
 
 private:
   void _eraseNextSector();
-  
+
   Flash *_flashObj;
   uint8_t **_dataPtr;
   uint8_t _dataSize;
