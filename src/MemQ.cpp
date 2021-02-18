@@ -134,19 +134,17 @@ void MemQ::saveFast()
     ringBuffer.headAddr += _totalByteToSave; //increment head pointer
     if (ringBuffer.headAddr >= _endAddr)
     {
+      //when addr resets , erase first sector.
       ringBuffer.headAddr = _startAddr;
-      
-      // reset(); //resets device as sector erase is not working
-      Serial.print(F(">>>Erasing Sector : "));
-      Serial.println(ringBuffer.headAddr>>12);
-     
+      Serial.print(F(">>>Erasing Sector : "));Serial.println(ringBuffer.headAddr>>12);
+
       _flashObj -> eraseSector(ringBuffer.headAddr);
       ringBuffer.erasedSector = ringBuffer.headAddr >> 12; //byte addr to sector addr
 
-       _ringEepObj->savePacket((byte *)&ringBuffer);
+      _ringEepObj->savePacket((byte *)&ringBuffer);
 
-      uint32_t curPage = ((uint32_t)ringBuffer.erasedSector)<<4;
-      _flashObj->dumpPage(curPage, pageBuf);
+      // uint32_t curPage = ((uint32_t)ringBuffer.erasedSector)<<4;
+      // _flashObj->dumpPage(curPage, pageBuf);
       // for (uint32_t i = curPage; i < curPage + 16; i++ )
       // {
       //   _flashObj->dumpPage(i, pageBuf);
@@ -265,6 +263,10 @@ void MemQ::erase()
     sectorAddr = i<<12;
     _flashObj->eraseSector(sectorAddr);
   }
+  //print first page to ensure that erase worked.
+  uint32_t curPage = ((uint32_t)sectorStart)<<4;
+  _flashObj->dumpPage(curPage, pageBuf);
+
 
   ringBuffer.headAddr = _startAddr;
   ringBuffer.tailAddr = _startAddr;
