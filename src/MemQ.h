@@ -3,8 +3,8 @@
 #include <Arduino.h>
 
 #if defined(PROD_BUILD)
-  #include "../FlashMemory/src/FlashMemory.h"
-  #include "../RingEEPROM/drc/RingEEPROM.h"
+  #include "../../FlashMemory/src/FlashMemory.h"
+  #include "../../RingEEPROM/src/RingEEPROM.h"
 #else
   #include "FlashMemory.h"
   #include "RingEEPROM.h"
