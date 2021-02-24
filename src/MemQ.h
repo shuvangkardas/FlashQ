@@ -1,9 +1,14 @@
 #ifndef _MEMQ_H_
 #define _MEMQ_H_
 #include <Arduino.h>
-#include "FlashMemory.h"
-#include "RingEEPROM.h"
 
+#if defined(PROD_BUILD)
+  #include "../FlashMemory/src/FlashMemory.h"
+  #include "../RingEEPROM/drc/RingEEPROM.h"
+#else
+  #include "FlashMemory.h"
+  #include "RingEEPROM.h"
+#endif
 #define DEBUG_ON
 
 typedef void (*func_t)(void);
